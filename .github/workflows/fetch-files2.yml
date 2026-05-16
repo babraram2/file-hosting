@@ -1,4 +1,4 @@
-name: Fetch External Files & Split into 45MB Zip parts2
+name: Fetch External Files & Split into 45MB Zip model
 
 on:
   workflow_dispatch:  # Manual trigger
@@ -28,9 +28,9 @@ jobs:
             curl -L -o "downloads/$filename" "$url"
           done < url-list.txt
 
-      - name: Split each file into 45MB zip parts2
+      - name: Split each file into 45MB zip model
         run: |
-          mkdir -p parts2
+          mkdir -p model
           
           for file in downloads/*; do
             if [ -f "$file" ]; then
@@ -39,25 +39,25 @@ jobs:
               
               echo "Processing: $filename"
               
-              # Create zip and split into 45MB parts2
-              zip -s 10m -r "parts2/${name_without_ext}.zip" "$file" -j
+              # Create zip and split into 45MB model
+              zip -s 10m -r "model/${name_without_ext}.zip" "$file" -j
               
               # Rename the main .zip file to .zip.001
-              if [ -f "parts2/${name_without_ext}.zip" ]; then
-                mv "parts2/${name_without_ext}.zip" "parts2/${name_without_ext}.zip.001"
+              if [ -f "model/${name_without_ext}.zip" ]; then
+                mv "model/${name_without_ext}.zip" "model/${name_without_ext}.zip.001"
               fi
               
               # Rename .z01, .z02, ... to .zip.002, .zip.003, ...
               counter=2
-              for part in parts2/${name_without_ext}.z[0-9]*; do
+              for part in model/${name_without_ext}.z[0-9]*; do
                 if [ -f "$part" ]; then
                   padded_num=$(printf '%03d' "$counter")
-                  mv "$part" "parts2/${name_without_ext}.zip.$padded_num"
+                  mv "$part" "model/${name_without_ext}.zip.$padded_num"
                   counter=$((counter + 1))
                 fi
               done
               
-              echo "Created $((counter - 1)) parts2 for $filename"
+              echo "Created $((counter - 1)) model for $filename"
             fi
           done
           
@@ -66,48 +66,48 @@ jobs:
 
       - name: Generate README with part list and reassembly instructions
         run: |
-          echo "# 📦 Split Files (45MB parts2)" > parts2/README.md
-          echo "" >> parts2/README.md
-          echo "Each file below is split into **10MB zip parts2**." >> parts2/README.md
-          echo "" >> parts2/README.md
+          echo "# 📦 Split Files (45MB model)" > model/README.md
+          echo "" >> model/README.md
+          echo "Each file below is split into **10MB zip model**." >> model/README.md
+          echo "" >> model/README.md
           
-          # List all unique base names from parts2
-          for base in $(ls parts2/*.zip.001 2>/dev/null | sed 's/\.zip\.001$//' | sort -u); do
+          # List all unique base names from model
+          for base in $(ls model/*.zip.001 2>/dev/null | sed 's/\.zip\.001$//' | sort -u); do
             base_name=$(basename "$base")
-            part_count=$(ls parts2/${base_name}.zip.* 2>/dev/null | wc -l)
+            part_count=$(ls model/${base_name}.zip.* 2>/dev/null | wc -l)
             
-            echo "## 📄 ${base_name}.safetensors (parts2: $part_count)" >> parts2/README.md
-            echo "" >> parts2/README.md
+            echo "## 📄 ${base_name}.safetensors (model: $part_count)" >> model/README.md
+            echo "" >> model/README.md
             
-            for part in $(ls parts2/${base_name}.zip.* 2>/dev/null | sort -V); do
+            for part in $(ls model/${base_name}.zip.* 2>/dev/null | sort -V); do
               part_name=$(basename "$part")
               part_size=$(du -h "$part" | cut -f1)
-              echo "- [$part_name](https://github.com/${{ github.repository }}/raw/main/parts2/$part_name) ($part_size)" >> parts2/README.md
+              echo "- [$part_name](https://github.com/${{ github.repository }}/raw/main/model/$part_name) ($part_size)" >> model/README.md
             done
-            echo "" >> parts2/README.md
+            echo "" >> model/README.md
           done
           
-          echo "## 🔧 How to Reassemble" >> parts2/README.md
-          echo "" >> parts2/README.md
-          echo "### Linux/macOS:" >> parts2/README.md
-          echo '```bash' >> parts2/README.md
-          echo '# Download all parts2, then:' >> parts2/README.md
-          echo 'cat filename.zip.* > filename.zip' >> parts2/README.md
-          echo 'unzip filename.zip' >> parts2/README.md
-          echo '```' >> parts2/README.md
-          echo "" >> parts2/README.md
-          echo "### Windows (Command Prompt):" >> parts2/README.md
-          echo '```cmd' >> parts2/README.md
-          echo 'copy /b filename.zip.001 + filename.zip.002 + filename.zip.003 filename.zip' >> parts2/README.md
-          echo '```' >> parts2/README.md
+          echo "## 🔧 How to Reassemble" >> model/README.md
+          echo "" >> model/README.md
+          echo "### Linux/macOS:" >> model/README.md
+          echo '```bash' >> model/README.md
+          echo '# Download all model, then:' >> model/README.md
+          echo 'cat filename.zip.* > filename.zip' >> model/README.md
+          echo 'unzip filename.zip' >> model/README.md
+          echo '```' >> model/README.md
+          echo "" >> model/README.md
+          echo "### Windows (Command Prompt):" >> model/README.md
+          echo '```cmd' >> model/README.md
+          echo 'copy /b filename.zip.001 + filename.zip.002 + filename.zip.003 filename.zip' >> model/README.md
+          echo '```' >> model/README.md
 
       - name: Commit and push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git lfs install
-          git lfs track "parts2/*.zip.*"
+          git lfs track "model/*.zip.*"
           git add .gitattributes
-          git add parts2/
+          git add model/
           git commit -m "Track zip parts with Git LFS"
           git push origin main
