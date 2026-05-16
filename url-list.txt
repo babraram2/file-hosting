@@ -1,1 +1,1 @@
-https://huggingface.co/k2-fsa/OmniVoice/blob/main/audio_tokenizer/model.safetensors
+https://huggingface.co/k2-fsa/OmniVoice/resolve/main/audio_tokenizer/model.safetensors?download=true
