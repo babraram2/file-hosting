@@ -13,6 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Create .gitignore to exclude downloads folder
+        run: |
+          echo "downloads/" >> .gitignore
+
       - name: Download files from URL list
         run: |
           mkdir -p downloads
@@ -36,7 +40,6 @@ jobs:
               echo "Processing: $filename"
               
               # Create zip and split into 45MB parts
-              # This creates: model.z01, model.z02, ..., model.zip
               zip -s 45m -r "parts/${name_without_ext}.zip" "$file" -j
               
               # Rename the main .zip file to .zip.001
@@ -45,7 +48,6 @@ jobs:
               fi
               
               # Rename .z01, .z02, ... to .zip.002, .zip.003, ...
-              # Use a counter starting from 2
               counter=2
               for part in parts/${name_without_ext}.z[0-9]*; do
                 if [ -f "$part" ]; then
@@ -58,6 +60,9 @@ jobs:
               echo "Created $((counter - 1)) parts for $filename"
             fi
           done
+          
+          # Remove downloads folder to avoid any accidental commit
+          rm -rf downloads
 
       - name: Generate README with part list and reassembly instructions
         run: |
@@ -66,24 +71,20 @@ jobs:
           echo "Each file below is split into **45MB zip parts**." >> parts/README.md
           echo "" >> parts/README.md
           
-          for file in downloads/*; do
-            if [ -f "$file" ]; then
-              filename=$(basename "$file")
-              name_without_ext="${filename%.*}"
-              original_size=$(du -h "$file" | cut -f1)
-              part_count=$(ls parts/${name_without_ext}.zip.* 2>/dev/null | wc -l)
-              
-              echo "## 📄 $filename (Original: $original_size, Parts: $part_count)" >> parts/README.md
-              echo "" >> parts/README.md
-              
-              # List parts in order
-              for part in $(ls parts/${name_without_ext}.zip.* 2>/dev/null | sort); do
-                part_name=$(basename "$part")
-                part_size=$(du -h "$part" | cut -f1)
-                echo "- [$part_name](https://github.com/${{ github.repository }}/raw/main/parts/$part_name) ($part_size)" >> parts/README.md
-              done
-              echo "" >> parts/README.md
-            fi
+          # List all unique base names from parts
+          for base in $(ls parts/*.zip.001 2>/dev/null | sed 's/\.zip\.001$//' | sort -u); do
+            base_name=$(basename "$base")
+            part_count=$(ls parts/${base_name}.zip.* 2>/dev/null | wc -l)
+            
+            echo "## 📄 ${base_name}.safetensors (Parts: $part_count)" >> parts/README.md
+            echo "" >> parts/README.md
+            
+            for part in $(ls parts/${base_name}.zip.* 2>/dev/null | sort -V); do
+              part_name=$(basename "$part")
+              part_size=$(du -h "$part" | cut -f1)
+              echo "- [$part_name](https://github.com/${{ github.repository }}/raw/main/parts/$part_name) ($part_size)" >> parts/README.md
+            done
+            echo "" >> parts/README.md
           done
           
           echo "## 🔧 How to Reassemble" >> parts/README.md
@@ -104,7 +105,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add parts/ downloads/
+          git add .gitignore parts/
           git diff --staged --quiet || git commit -m "Add split files (45MB parts)"
           git pull origin main --rebase
           git push origin main
