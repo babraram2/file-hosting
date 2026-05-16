@@ -12,6 +12,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          lfs: true  # Enable LFS
+
+      - name: Install Git LFS
+        run: |
+          sudo apt-get install git-lfs
+          git lfs install
 
       - name: Download files from URL list
         run: |
@@ -19,10 +26,15 @@ jobs:
           while IFS= read -r url; do
             # Skip empty lines and comments
             [[ -z "$url" || "$url" == \#* ]] && continue
-            filename=$(basename "$url")
+            filename=$(basename "$url" | cut -d'?' -f1)  # Remove query parameters from filename
             echo "Downloading: $filename"
             curl -L -o "files/$filename" "$url"
           done < url-list.txt
+
+      - name: Configure Git LFS for large files
+        run: |
+          git lfs track "files/*.safetensors"
+          git add .gitattributes
 
       - name: Commit and push files
         run: |
@@ -30,5 +42,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "Add/update files" || true
-          git pull origin main --rebase  # Add this line
+          git pull origin main --rebase
           git push origin main
