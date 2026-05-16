@@ -1,10 +1,10 @@
-name: Fetch External Files & Split into 45MB Zip Parts
+name: Fetch External Files & Split into 45MB Zip Parts (with LFS)
 
 on:
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
   push:
     paths:
-      - 'url-list.txt'  # Triggers when you update the URL list
+      - 'url-list.txt'
 
 jobs:
   fetch-and-split:
@@ -12,12 +12,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install Git LFS
+        run: |
+          sudo apt-get install git-lfs
+          git lfs install
 
       - name: Download files from URL list
         run: |
           mkdir -p downloads
           while IFS= read -r url; do
-            # Skip empty lines and comments
             [[ -z "$url" || "$url" == \#* ]] && continue
             filename=$(basename "$url" | cut -d'?' -f1)
             echo "Downloading: $filename"
@@ -34,12 +40,8 @@ jobs:
               name_without_ext="${filename%.*}"
               
               echo "Processing: $filename"
-              
-              # Create zip and split into 45MB parts
               zip -s 45m -r "parts/${name_without_ext}.zip" "$file" -j
               
-              # Rename parts for cleaner naming
-              # zip creates .z01, .z02, etc. - rename to .zip.001, .zip.002
               for part in parts/${name_without_ext}.z*; do
                 if [ -f "$part" ]; then
                   num=$(echo "$part" | grep -oP 'z\K\d+')
@@ -47,7 +49,6 @@ jobs:
                 fi
               done
               
-              # If only one part exists, rename .zip to .zip.001
               if [ -f "parts/${name_without_ext}.zip" ] && [ ! -f "parts/${name_without_ext}.zip.001" ]; then
                 mv "parts/${name_without_ext}.zip" "parts/${name_without_ext}.zip.001"
               fi
@@ -56,52 +57,16 @@ jobs:
             fi
           done
 
-      - name: Generate README with part list and reassembly instructions
+      - name: Configure Git LFS for large files
         run: |
-          echo "# 📦 Split Files (45MB Parts)" > parts/README.md
-          echo "" >> parts/README.md
-          echo "Each file below is split into **45MB zip parts**." >> parts/README.md
-          echo "" >> parts/README.md
-          
-          for file in downloads/*; do
-            if [ -f "$file" ]; then
-              filename=$(basename "$file")
-              name_without_ext="${filename%.*}"
-              original_size=$(du -h "$file" | cut -f1)
-              part_count=$(ls parts/${name_without_ext}.zip.* 2>/dev/null | wc -l)
-              
-              echo "## 📄 $filename (Original: $original_size, Parts: $part_count)" >> parts/README.md
-              echo "" >> parts/README.md
-              
-              for part in parts/${name_without_ext}.zip.*; do
-                if [ -f "$part" ]; then
-                  part_name=$(basename "$part")
-                  part_size=$(du -h "$part" | cut -f1)
-                  echo "- [$part_name](https://github.com/${{ github.repository }}/raw/main/parts/$part_name) ($part_size)" >> parts/README.md
-                fi
-              done
-              echo "" >> parts/README.md
-            fi
-          done
-          
-          echo "## 🔧 How to Reassemble" >> parts/README.md
-          echo "" >> parts/README.md
-          echo "### Linux/macOS:" >> parts/README.md
-          echo '```bash' >> parts/README.md
-          echo 'cat filename.zip.* > filename.zip' >> parts/README.md
-          echo 'unzip filename.zip' >> parts/README.md
-          echo '```' >> parts/README.md
-          echo "" >> parts/README.md
-          echo "### Windows (Command Prompt):" >> parts/README.md
-          echo '```cmd' >> parts/README.md
-          echo 'copy /b filename.zip.001 + filename.zip.002 + filename.zip.003 filename.zip' >> parts/README.md
-          echo '```' >> parts/README.md
+          git lfs track "parts/*.zip.*"
+          git add .gitattributes
 
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add parts/ downloads/
+          git add parts/ downloads/ .gitattributes
           git diff --staged --quiet || git commit -m "Add split files (45MB parts)"
           git pull origin main --rebase
           git push origin main
