@@ -40,7 +40,7 @@ jobs:
               echo "Processing: $filename"
               
               # Create zip and split into 45MB parts2
-              zip -s 45m -r "parts2/${name_without_ext}.zip" "$file" -j
+              zip -s 10m -r "parts2/${name_without_ext}.zip" "$file" -j
               
               # Rename the main .zip file to .zip.001
               if [ -f "parts2/${name_without_ext}.zip" ]; then
@@ -68,7 +68,7 @@ jobs:
         run: |
           echo "# 📦 Split Files (45MB parts2)" > parts2/README.md
           echo "" >> parts2/README.md
-          echo "Each file below is split into **45MB zip parts2**." >> parts2/README.md
+          echo "Each file below is split into **10MB zip parts2**." >> parts2/README.md
           echo "" >> parts2/README.md
           
           # List all unique base names from parts2
