@@ -36,28 +36,26 @@ jobs:
               echo "Processing: $filename"
               
               # Create zip and split into 45MB parts
+              # This creates: model.z01, model.z02, ..., model.zip
               zip -s 45m -r "parts/${name_without_ext}.zip" "$file" -j
               
-              # Fix: Rename .z01, .z02, etc. to .zip.001, .zip.002
-              # Use sed to extract number and avoid printf octal issues
-              for part in parts/${name_without_ext}.z*; do
-                if [ -f "$part" ]; then
-                  # Extract the number using sed
-                  num=$(echo "$part" | sed 's/.*\.z\([0-9]*\)$/\1/')
-                  # Remove leading zeros for proper handling
-                  num=$((10#$num))
-                  # Format with 3 digits
-                  padded_num=$(printf '%03d' "$num")
-                  mv "$part" "parts/${name_without_ext}.zip.$padded_num"
-                fi
-              done
-              
-              # If only one part exists (just .zip, no .z01), rename to .zip.001
-              if [ -f "parts/${name_without_ext}.zip" ] && [ ! -f "parts/${name_without_ext}.zip.001" ]; then
+              # Rename the main .zip file to .zip.001
+              if [ -f "parts/${name_without_ext}.zip" ]; then
                 mv "parts/${name_without_ext}.zip" "parts/${name_without_ext}.zip.001"
               fi
               
-              echo "Created $(ls parts/${name_without_ext}.zip.* 2>/dev/null | wc -l) parts for $filename"
+              # Rename .z01, .z02, ... to .zip.002, .zip.003, ...
+              # Use a counter starting from 2
+              counter=2
+              for part in parts/${name_without_ext}.z[0-9]*; do
+                if [ -f "$part" ]; then
+                  padded_num=$(printf '%03d' "$counter")
+                  mv "$part" "parts/${name_without_ext}.zip.$padded_num"
+                  counter=$((counter + 1))
+                fi
+              done
+              
+              echo "Created $((counter - 1)) parts for $filename"
             fi
           done
 
@@ -78,12 +76,11 @@ jobs:
               echo "## 📄 $filename (Original: $original_size, Parts: $part_count)" >> parts/README.md
               echo "" >> parts/README.md
               
-              for part in parts/${name_without_ext}.zip.*; do
-                if [ -f "$part" ]; then
-                  part_name=$(basename "$part")
-                  part_size=$(du -h "$part" | cut -f1)
-                  echo "- [$part_name](https://github.com/${{ github.repository }}/raw/main/parts/$part_name) ($part_size)" >> parts/README.md
-                fi
+              # List parts in order
+              for part in $(ls parts/${name_without_ext}.zip.* 2>/dev/null | sort); do
+                part_name=$(basename "$part")
+                part_size=$(du -h "$part" | cut -f1)
+                echo "- [$part_name](https://github.com/${{ github.repository }}/raw/main/parts/$part_name) ($part_size)" >> parts/README.md
               done
               echo "" >> parts/README.md
             fi
