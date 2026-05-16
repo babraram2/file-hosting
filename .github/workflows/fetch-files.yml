@@ -27,7 +27,8 @@ jobs:
       - name: Commit and push files
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "actions@github.com"
-          git add files/
-          git diff --staged --quiet || git commit -m "Update hosted files"
-          git push
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Add/update files" || true
+          git pull origin main --rebase  # Add this line
+          git push origin main
