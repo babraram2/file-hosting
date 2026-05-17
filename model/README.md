@@ -1,0 +1,25 @@
+# 📦 Split Files (45MB parts)
+
+Each file below is split into **45MB zip parts**.
+
+## 📄 model.safetensors (parts: 1)
+
+- [model.zip](https://github.com/babraram2/file-hosting/raw/main/model/model.zip) (16M)
+
+## 🔧 How to Reassemble
+
+### Linux/macOS:
+```bash
+# For the main zip file (filename.zip):
+# Download all parts (filename.zip, filename.z01, filename.z02, etc.)
+# Then simply unzip the main file:
+unzip filename.zip
+# zip will automatically find and use the .z01, .z02 parts
+```
+
+### Windows:
+```cmd
+# Download all parts (filename.zip, filename.z01, filename.z02, etc.)
+# Then extract using 7-Zip or WinRAR:
+# Right-click filename.zip → Extract Here
+```
