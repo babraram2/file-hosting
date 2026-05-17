@@ -39,25 +39,11 @@ jobs:
               
               echo "Processing: $filename"
               
-              # Create zip and split into 45MB model
-              zip -s 10m -r "model/${name_without_ext}.zip" "$file" -j
+              # Create zip and split into 45MB parts (keeps original .zip, .z01, .z02 names)
+              zip -s 45m -r "model/${name_without_ext}.zip" "$file" -j
               
-              # Rename the main .zip file to .zip.001
-              if [ -f "model/${name_without_ext}.zip" ]; then
-                mv "model/${name_without_ext}.zip" "model/${name_without_ext}.zip.001"
-              fi
-              
-              # Rename .z01, .z02, ... to .zip.002, .zip.003, ...
-              counter=2
-              for part in model/${name_without_ext}.z[0-9]*; do
-                if [ -f "$part" ]; then
-                  padded_num=$(printf '%03d' "$counter")
-                  mv "$part" "model/${name_without_ext}.zip.$padded_num"
-                  counter=$((counter + 1))
-                fi
-              done
-              
-              echo "Created $((counter - 1)) model for $filename"
+              echo "Created split zip parts for $filename"
+              ls -la model/${name_without_ext}.zip*
             fi
           done
           
@@ -66,20 +52,20 @@ jobs:
 
       - name: Generate README with part list and reassembly instructions
         run: |
-          echo "# 📦 Split Files (45MB model)" > model/README.md
+          echo "# 📦 Split Files (45MB parts)" > model/README.md
           echo "" >> model/README.md
-          echo "Each file below is split into **10MB zip model**." >> model/README.md
+          echo "Each file below is split into **45MB zip parts**." >> model/README.md
           echo "" >> model/README.md
           
           # List all unique base names from model
-          for base in $(ls model/*.zip.001 2>/dev/null | sed 's/\.zip\.001$//' | sort -u); do
+          for base in $(ls model/*.zip 2>/dev/null | sed 's/\.zip$//' | sort -u); do
             base_name=$(basename "$base")
-            part_count=$(ls model/${base_name}.zip.* 2>/dev/null | wc -l)
+            part_count=$(ls model/${base_name}.zip* 2>/dev/null | wc -l)
             
-            echo "## 📄 ${base_name}.safetensors (model: $part_count)" >> model/README.md
+            echo "## 📄 ${base_name}.safetensors (parts: $part_count)" >> model/README.md
             echo "" >> model/README.md
             
-            for part in $(ls model/${base_name}.zip.* 2>/dev/null | sort -V); do
+            for part in $(ls model/${base_name}.zip* 2>/dev/null | sort -V); do
               part_name=$(basename "$part")
               part_size=$(du -h "$part" | cut -f1)
               echo "- [$part_name](https://github.com/${{ github.repository }}/raw/main/model/$part_name) ($part_size)" >> model/README.md
@@ -91,14 +77,18 @@ jobs:
           echo "" >> model/README.md
           echo "### Linux/macOS:" >> model/README.md
           echo '```bash' >> model/README.md
-          echo '# Download all model, then:' >> model/README.md
-          echo 'cat filename.zip.* > filename.zip' >> model/README.md
+          echo '# For the main zip file (filename.zip):' >> model/README.md
+          echo '# Download all parts (filename.zip, filename.z01, filename.z02, etc.)' >> model/README.md
+          echo '# Then simply unzip the main file:' >> model/README.md
           echo 'unzip filename.zip' >> model/README.md
+          echo '# zip will automatically find and use the .z01, .z02 parts' >> model/README.md
           echo '```' >> model/README.md
           echo "" >> model/README.md
-          echo "### Windows (Command Prompt):" >> model/README.md
+          echo "### Windows:" >> model/README.md
           echo '```cmd' >> model/README.md
-          echo 'copy /b filename.zip.001 + filename.zip.002 + filename.zip.003 filename.zip' >> model/README.md
+          echo '# Download all parts (filename.zip, filename.z01, filename.z02, etc.)' >> model/README.md
+          echo '# Then extract using 7-Zip or WinRAR:' >> model/README.md
+          echo '# Right-click filename.zip → Extract Here' >> model/README.md
           echo '```' >> model/README.md
 
       - name: Commit and push
@@ -106,8 +96,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git lfs install
-          git lfs track "model/*.zip.*"
+          git lfs track "model/*.zip"
+          git lfs track "model/*.z[0-9][0-9]"
           git add .gitattributes
           git add model/
-          git commit -m "Track zip parts with Git LFS"
+          git commit -m "Add split zip parts with original naming"
           git push origin main
