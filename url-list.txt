@@ -1,1 +1,1 @@
-https://huggingface.co/k2-fsa/OmniVoice/resolve/main/model.safetensors?download=true
+https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/RVC1006Nvidia.7z
