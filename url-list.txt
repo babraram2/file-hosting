@@ -1,1 +1,1 @@
-https://www.weights.com/api/replay/download-url?platform=windows
+https://huggingface.co/mlabonne/gemma-3-4b-it-abliterated-GGUF/resolve/main/gemma-3-4b-it-abliterated.q4_k_m.gguf?download=true
