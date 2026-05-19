@@ -4,7 +4,11 @@ Each file below is split into **45MB zip parts**.
 
 ## 📄 RVC1006Nvidia.safetensors (parts: 1)
 
-- [RVC1006Nvidia.zip](https://github.com/babraram2/file-hosting/raw/main/model/RVC1006Nvidia.zip) (19M)
+- [RVC1006Nvidia.zip](https://github.com/babraram2/file-hosting/raw/main/model/RVC1006Nvidia.zip) (4.0K)
+
+## 📄 download-url.safetensors (parts: 1)
+
+- [download-url.zip](https://github.com/babraram2/file-hosting/raw/main/model/download-url.zip) (5.3M)
 
 ## 🔧 How to Reassemble
 
