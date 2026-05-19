@@ -8,7 +8,11 @@ Each file below is split into **45MB zip parts**.
 
 ## 📄 download-url.safetensors (parts: 1)
 
-- [download-url.zip](https://github.com/babraram2/file-hosting/raw/main/model/download-url.zip) (5.3M)
+- [download-url.zip](https://github.com/babraram2/file-hosting/raw/main/model/download-url.zip) (4.0K)
+
+## 📄 gemma-3-4b-it-abliterated.q4_k_m.safetensors (parts: 1)
+
+- [gemma-3-4b-it-abliterated.q4_k_m.zip](https://github.com/babraram2/file-hosting/raw/main/model/gemma-3-4b-it-abliterated.q4_k_m.zip) (39M)
 
 ## 🔧 How to Reassemble
 
