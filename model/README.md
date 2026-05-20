@@ -6,7 +6,13 @@ Each file below is split into **45MB zip parts** and stored in its own folder.
 
 **Parts: 1**
 
-- [gemma-3-4b-it-abliterated.q4_k_m.zip](https://github.com/babraram2/file-hosting/raw/main/model/gemma-3-4b-it-abliterated.q4_k_m/gemma-3-4b-it-abliterated.q4_k_m.zip) (39M)
+- [gemma-3-4b-it-abliterated.q4_k_m.zip](https://github.com/babraram2/file-hosting/raw/main/model/gemma-3-4b-it-abliterated.q4_k_m/gemma-3-4b-it-abliterated.q4_k_m.zip) (4.0K)
+
+## 📄 mmproj-mlabonne_gemma-3-4b-it-abliterated-f16
+
+**Parts: 1**
+
+- [mmproj-mlabonne_gemma-3-4b-it-abliterated-f16.zip](https://github.com/babraram2/file-hosting/raw/main/model/mmproj-mlabonne_gemma-3-4b-it-abliterated-f16/mmproj-mlabonne_gemma-3-4b-it-abliterated-f16.zip) (34M)
 
 ## 🔧 How to Reassemble
 
