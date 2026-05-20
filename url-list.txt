@@ -1,1 +1,1 @@
-https://huggingface.co/mlabonne/gemma-3-4b-it-abliterated-GGUF/resolve/main/gemma-3-4b-it-abliterated.q4_k_m.gguf?download=true
+https://huggingface.co/bartowski/mlabonne_gemma-3-4b-it-abliterated-GGUF/resolve/main/mmproj-mlabonne_gemma-3-4b-it-abliterated-f16.gguf?download=true
